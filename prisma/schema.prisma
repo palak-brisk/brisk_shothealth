@@ -1,0 +1,1041 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model EFMigrationsHistory {
+  MigrationId    String @id(map: "PK___EFMigrationsHistory") @db.NVarChar(150)
+  ProductVersion String @db.NVarChar(32)
+
+  @@map("__EFMigrationsHistory")
+}
+
+model AbpAuditLogs {
+  Id                   BigInt   @id(map: "PK_AbpAuditLogs") @default(autoincrement())
+  BrowserInfo          String?  @db.NVarChar(512)
+  ClientIpAddress      String?  @db.NVarChar(64)
+  ClientName           String?  @db.NVarChar(128)
+  CustomData           String?  @db.NVarChar(2000)
+  Exception            String?  @db.NVarChar(2000)
+  ExecutionDuration    Int
+  ExecutionTime        DateTime
+  ImpersonatorTenantId Int?
+  ImpersonatorUserId   BigInt?
+  MethodName           String?  @db.NVarChar(256)
+  Parameters           String?  @db.NVarChar(1024)
+  ServiceName          String?  @db.NVarChar(256)
+  TenantId             Int?
+  UserId               BigInt?
+  ReturnValue          String?  @db.NVarChar(Max)
+  ExceptionMessage     String?  @db.NVarChar(1024)
+
+  @@index([TenantId, ExecutionDuration], map: "IX_AbpAuditLogs_TenantId_ExecutionDuration")
+  @@index([TenantId, ExecutionTime], map: "IX_AbpAuditLogs_TenantId_ExecutionTime")
+  @@index([TenantId, UserId], map: "IX_AbpAuditLogs_TenantId_UserId")
+}
+
+model AbpBackgroundJobs {
+  Id            BigInt    @id(map: "PK_AbpBackgroundJobs") @default(autoincrement())
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  IsAbandoned   Boolean
+  JobArgs       String    @db.NVarChar(Max)
+  JobType       String    @db.NVarChar(512)
+  LastTryTime   DateTime?
+  NextTryTime   DateTime
+  Priority      Int       @db.TinyInt
+  TryCount      Int       @db.SmallInt
+
+  @@index([IsAbandoned, NextTryTime], map: "IX_AbpBackgroundJobs_IsAbandoned_NextTryTime")
+}
+
+model AbpDynamicEntityProperties {
+  Id                             Int                              @id(map: "PK_AbpDynamicEntityProperties") @default(autoincrement())
+  EntityFullName                 String?                          @db.NVarChar(256)
+  DynamicPropertyId              Int
+  TenantId                       Int?
+  AbpDynamicProperties           AbpDynamicProperties             @relation(fields: [DynamicPropertyId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpDynamicEntityProperties_AbpDynamicProperties_DynamicPropertyId")
+  AbpDynamicEntityPropertyValues AbpDynamicEntityPropertyValues[]
+
+  @@index([DynamicPropertyId], map: "IX_AbpDynamicEntityProperties_DynamicPropertyId")
+}
+
+model AbpDynamicEntityPropertyValues {
+  Id                         BigInt                     @id(map: "PK_AbpDynamicEntityPropertyValues") @default(autoincrement())
+  Value                      String                     @db.NVarChar(Max)
+  EntityId                   String?                    @db.NVarChar(Max)
+  DynamicEntityPropertyId    Int
+  TenantId                   Int?
+  AbpDynamicEntityProperties AbpDynamicEntityProperties @relation(fields: [DynamicEntityPropertyId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpDynamicEntityPropertyValues_AbpDynamicEntityProperties_DynamicEntityPropertyId")
+
+  @@index([DynamicEntityPropertyId], map: "IX_AbpDynamicEntityPropertyValues_DynamicEntityPropertyId")
+}
+
+model AbpDynamicProperties {
+  Id                         Int                          @id(map: "PK_AbpDynamicProperties") @default(autoincrement())
+  PropertyName               String?                      @db.NVarChar(256)
+  DisplayName                String?                      @db.NVarChar(Max)
+  InputType                  String?                      @db.NVarChar(Max)
+  Permission                 String?                      @db.NVarChar(Max)
+  TenantId                   Int?
+  AbpDynamicEntityProperties AbpDynamicEntityProperties[]
+  AbpDynamicPropertyValues   AbpDynamicPropertyValues[]
+}
+
+model AbpDynamicPropertyValues {
+  Id                   BigInt               @id(map: "PK_AbpDynamicPropertyValues") @default(autoincrement())
+  Value                String               @db.NVarChar(Max)
+  TenantId             Int?
+  DynamicPropertyId    Int
+  AbpDynamicProperties AbpDynamicProperties @relation(fields: [DynamicPropertyId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpDynamicPropertyValues_AbpDynamicProperties_DynamicPropertyId")
+
+  @@index([DynamicPropertyId], map: "IX_AbpDynamicPropertyValues_DynamicPropertyId")
+}
+
+model AbpEditions {
+  Id                   Int           @id(map: "PK_AbpEditions") @default(autoincrement())
+  CreationTime         DateTime
+  CreatorUserId        BigInt?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  DisplayName          String        @db.NVarChar(64)
+  IsDeleted            Boolean
+  LastModificationTime DateTime?
+  LastModifierUserId   BigInt?
+  Name                 String        @db.NVarChar(32)
+  AbpFeatures          AbpFeatures[]
+  AbpTenants           AbpTenants[]
+}
+
+model AbpEntityChanges {
+  Id                       BigInt                     @id(map: "PK_AbpEntityChanges") @default(autoincrement())
+  ChangeTime               DateTime
+  ChangeType               Int                        @db.TinyInt
+  EntityChangeSetId        BigInt
+  EntityId                 String?                    @db.NVarChar(48)
+  EntityTypeFullName       String?                    @db.NVarChar(192)
+  TenantId                 Int?
+  AbpEntityChangeSets      AbpEntityChangeSets        @relation(fields: [EntityChangeSetId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpEntityChanges_AbpEntityChangeSets_EntityChangeSetId")
+  AbpEntityPropertyChanges AbpEntityPropertyChanges[]
+
+  @@index([EntityChangeSetId], map: "IX_AbpEntityChanges_EntityChangeSetId")
+  @@index([EntityTypeFullName, EntityId], map: "IX_AbpEntityChanges_EntityTypeFullName_EntityId")
+}
+
+model AbpEntityChangeSets {
+  Id                   BigInt             @id(map: "PK_AbpEntityChangeSets") @default(autoincrement())
+  BrowserInfo          String?            @db.NVarChar(512)
+  ClientIpAddress      String?            @db.NVarChar(64)
+  ClientName           String?            @db.NVarChar(128)
+  CreationTime         DateTime
+  ExtensionData        String?            @db.NVarChar(Max)
+  ImpersonatorTenantId Int?
+  ImpersonatorUserId   BigInt?
+  Reason               String?            @db.NVarChar(256)
+  TenantId             Int?
+  UserId               BigInt?
+  AbpEntityChanges     AbpEntityChanges[]
+
+  @@index([TenantId, CreationTime], map: "IX_AbpEntityChangeSets_TenantId_CreationTime")
+  @@index([TenantId, Reason], map: "IX_AbpEntityChangeSets_TenantId_Reason")
+  @@index([TenantId, UserId], map: "IX_AbpEntityChangeSets_TenantId_UserId")
+}
+
+model AbpEntityPropertyChanges {
+  Id                   BigInt           @id(map: "PK_AbpEntityPropertyChanges") @default(autoincrement())
+  EntityChangeId       BigInt
+  NewValue             String?          @db.NVarChar(512)
+  OriginalValue        String?          @db.NVarChar(512)
+  PropertyName         String?          @db.NVarChar(96)
+  PropertyTypeFullName String?          @db.NVarChar(192)
+  TenantId             Int?
+  NewValueHash         String?          @db.NVarChar(Max)
+  OriginalValueHash    String?          @db.NVarChar(Max)
+  AbpEntityChanges     AbpEntityChanges @relation(fields: [EntityChangeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpEntityPropertyChanges_AbpEntityChanges_EntityChangeId")
+
+  @@index([EntityChangeId], map: "IX_AbpEntityPropertyChanges_EntityChangeId")
+}
+
+model AbpFeatures {
+  Id            BigInt       @id(map: "PK_AbpFeatures") @default(autoincrement())
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  Discriminator String       @db.NVarChar(21)
+  Name          String       @db.NVarChar(128)
+  Value         String       @db.NVarChar(2000)
+  EditionId     Int?
+  TenantId      Int?
+  AbpEditions   AbpEditions? @relation(fields: [EditionId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpFeatures_AbpEditions_EditionId")
+
+  @@index([EditionId, Name], map: "IX_AbpFeatures_EditionId_Name")
+  @@index([TenantId, Name], map: "IX_AbpFeatures_TenantId_Name")
+}
+
+model AbpLanguages {
+  Id                   Int       @id(map: "PK_AbpLanguages") @default(autoincrement())
+  CreationTime         DateTime
+  CreatorUserId        BigInt?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  DisplayName          String    @db.NVarChar(64)
+  Icon                 String?   @db.NVarChar(128)
+  IsDeleted            Boolean
+  LastModificationTime DateTime?
+  LastModifierUserId   BigInt?
+  Name                 String    @db.NVarChar(128)
+  TenantId             Int?
+  IsDisabled           Boolean   @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__AbpLangua__IsDis__778AC167")
+
+  @@index([TenantId, Name], map: "IX_AbpLanguages_TenantId_Name")
+}
+
+model AbpLanguageTexts {
+  Id                   BigInt    @id(map: "PK_AbpLanguageTexts") @default(autoincrement())
+  CreationTime         DateTime
+  CreatorUserId        BigInt?
+  Key                  String    @db.NVarChar(256)
+  LanguageName         String    @db.NVarChar(128)
+  LastModificationTime DateTime?
+  LastModifierUserId   BigInt?
+  Source               String    @db.NVarChar(128)
+  TenantId             Int?
+  Value                String    @db.NVarChar(Max)
+
+  @@index([TenantId, Source, LanguageName, Key], map: "IX_AbpLanguageTexts_TenantId_Source_LanguageName_Key")
+}
+
+model AbpNotifications {
+  Id                              String   @id(map: "PK_AbpNotifications") @db.UniqueIdentifier
+  CreationTime                    DateTime
+  CreatorUserId                   BigInt?
+  Data                            String?  @db.NVarChar(Max)
+  DataTypeName                    String?  @db.NVarChar(512)
+  EntityId                        String?  @db.NVarChar(96)
+  EntityTypeAssemblyQualifiedName String?  @db.NVarChar(512)
+  EntityTypeName                  String?  @db.NVarChar(250)
+  ExcludedUserIds                 String?  @db.NVarChar(Max)
+  NotificationName                String   @db.NVarChar(96)
+  Severity                        Int      @db.TinyInt
+  TenantIds                       String?  @db.NVarChar(Max)
+  UserIds                         String?  @db.NVarChar(Max)
+  TargetNotifiers                 String?  @db.NVarChar(1024)
+}
+
+model AbpNotificationSubscriptions {
+  Id                              String   @id(map: "PK_AbpNotificationSubscriptions") @db.UniqueIdentifier
+  CreationTime                    DateTime
+  CreatorUserId                   BigInt?
+  EntityId                        String?  @db.NVarChar(96)
+  EntityTypeAssemblyQualifiedName String?  @db.NVarChar(512)
+  EntityTypeName                  String?  @db.NVarChar(250)
+  NotificationName                String?  @db.NVarChar(96)
+  TenantId                        Int?
+  UserId                          BigInt
+  TargetNotifiers                 String?  @db.NVarChar(1024)
+
+  @@index([NotificationName, EntityTypeName, EntityId, UserId], map: "IX_AbpNotificationSubscriptions_NotificationName_EntityTypeName_EntityId_UserId")
+  @@index([TenantId, NotificationName, EntityTypeName, EntityId, UserId], map: "IX_AbpNotificationSubscriptions_TenantId_NotificationName_EntityTypeName_EntityId_UserId")
+}
+
+model AbpOrganizationUnitRoles {
+  Id                 BigInt   @id(map: "PK_AbpOrganizationUnitRoles") @default(autoincrement())
+  CreationTime       DateTime
+  CreatorUserId      BigInt?
+  TenantId           Int?
+  RoleId             Int
+  OrganizationUnitId BigInt
+  IsDeleted          Boolean
+
+  @@index([TenantId, OrganizationUnitId], map: "IX_AbpOrganizationUnitRoles_TenantId_OrganizationUnitId")
+  @@index([TenantId, RoleId], map: "IX_AbpOrganizationUnitRoles_TenantId_RoleId")
+}
+
+model AbpOrganizationUnits {
+  Id                         BigInt                 @id(map: "PK_AbpOrganizationUnits") @default(autoincrement())
+  Code                       String                 @db.NVarChar(95)
+  CreationTime               DateTime
+  CreatorUserId              BigInt?
+  DeleterUserId              BigInt?
+  DeletionTime               DateTime?
+  DisplayName                String                 @db.NVarChar(128)
+  IsDeleted                  Boolean
+  LastModificationTime       DateTime?
+  LastModifierUserId         BigInt?
+  ParentId                   BigInt?
+  TenantId                   Int?
+  AbpOrganizationUnits       AbpOrganizationUnits?  @relation("AbpOrganizationUnitsToAbpOrganizationUnits", fields: [ParentId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpOrganizationUnits_AbpOrganizationUnits_ParentId")
+  other_AbpOrganizationUnits AbpOrganizationUnits[] @relation("AbpOrganizationUnitsToAbpOrganizationUnits")
+
+  @@index([ParentId], map: "IX_AbpOrganizationUnits_ParentId")
+  @@index([TenantId, Code], map: "IX_AbpOrganizationUnits_TenantId_Code")
+}
+
+model AbpPermissions {
+  Id            BigInt    @id(map: "PK_AbpPermissions") @default(autoincrement())
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  Discriminator String    @db.NVarChar(21)
+  IsGranted     Boolean
+  Name          String    @db.NVarChar(128)
+  TenantId      Int?
+  RoleId        Int?
+  UserId        BigInt?
+  AbpRoles      AbpRoles? @relation(fields: [RoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpPermissions_AbpRoles_RoleId")
+  AbpUsers      AbpUsers? @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpPermissions_AbpUsers_UserId")
+
+  @@index([RoleId], map: "IX_AbpPermissions_RoleId")
+  @@index([TenantId, Name], map: "IX_AbpPermissions_TenantId_Name")
+  @@index([UserId], map: "IX_AbpPermissions_UserId")
+}
+
+model AbpRoleClaims {
+  Id            BigInt   @id(map: "PK_AbpRoleClaims") @default(autoincrement())
+  ClaimType     String?  @db.NVarChar(256)
+  ClaimValue    String?  @db.NVarChar(Max)
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  RoleId        Int
+  TenantId      Int?
+  AbpRoles      AbpRoles @relation(fields: [RoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpRoleClaims_AbpRoles_RoleId")
+
+  @@index([RoleId], map: "IX_AbpRoleClaims_RoleId")
+  @@index([TenantId, ClaimType], map: "IX_AbpRoleClaims_TenantId_ClaimType")
+}
+
+model AbpRoles {
+  Id                                             Int              @id(map: "PK_AbpRoles") @default(autoincrement())
+  ConcurrencyStamp                               String?          @db.NVarChar(128)
+  CreationTime                                   DateTime
+  CreatorUserId                                  BigInt?
+  DeleterUserId                                  BigInt?
+  DeletionTime                                   DateTime?
+  DisplayName                                    String           @db.NVarChar(64)
+  IsDefault                                      Boolean
+  IsDeleted                                      Boolean
+  IsStatic                                       Boolean
+  LastModificationTime                           DateTime?
+  LastModifierUserId                             BigInt?
+  Name                                           String           @db.NVarChar(32)
+  NormalizedName                                 String           @db.NVarChar(32)
+  TenantId                                       Int?
+  Description                                    String?          @db.NVarChar(Max)
+  AbpPermissions                                 AbpPermissions[]
+  AbpRoleClaims                                  AbpRoleClaims[]
+  AbpUsers_AbpRoles_CreatorUserIdToAbpUsers      AbpUsers?        @relation("AbpRoles_CreatorUserIdToAbpUsers", fields: [CreatorUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpRoles_AbpUsers_CreatorUserId")
+  AbpUsers_AbpRoles_DeleterUserIdToAbpUsers      AbpUsers?        @relation("AbpRoles_DeleterUserIdToAbpUsers", fields: [DeleterUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpRoles_AbpUsers_DeleterUserId")
+  AbpUsers_AbpRoles_LastModifierUserIdToAbpUsers AbpUsers?        @relation("AbpRoles_LastModifierUserIdToAbpUsers", fields: [LastModifierUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpRoles_AbpUsers_LastModifierUserId")
+
+  @@index([CreatorUserId], map: "IX_AbpRoles_CreatorUserId")
+  @@index([DeleterUserId], map: "IX_AbpRoles_DeleterUserId")
+  @@index([LastModifierUserId], map: "IX_AbpRoles_LastModifierUserId")
+  @@index([TenantId, NormalizedName], map: "IX_AbpRoles_TenantId_NormalizedName")
+}
+
+model AbpSettings {
+  Id                   BigInt    @id(map: "PK_AbpSettings") @default(autoincrement())
+  CreationTime         DateTime
+  CreatorUserId        BigInt?
+  LastModificationTime DateTime?
+  LastModifierUserId   BigInt?
+  Name                 String    @db.NVarChar(256)
+  TenantId             Int?
+  UserId               BigInt?
+  Value                String?   @db.NVarChar(Max)
+  AbpUsers             AbpUsers? @relation(fields: [UserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpSettings_AbpUsers_UserId")
+
+  @@unique([TenantId, Name, UserId], map: "IX_AbpSettings_TenantId_Name_UserId")
+  @@index([UserId], map: "IX_AbpSettings_UserId")
+}
+
+model AbpTenantNotifications {
+  Id                              String   @id(map: "PK_AbpTenantNotifications") @db.UniqueIdentifier
+  CreationTime                    DateTime
+  CreatorUserId                   BigInt?
+  Data                            String?  @db.NVarChar(Max)
+  DataTypeName                    String?  @db.NVarChar(512)
+  EntityId                        String?  @db.NVarChar(96)
+  EntityTypeAssemblyQualifiedName String?  @db.NVarChar(512)
+  EntityTypeName                  String?  @db.NVarChar(250)
+  NotificationName                String   @db.NVarChar(96)
+  Severity                        Int      @db.TinyInt
+  TenantId                        Int?
+
+  @@index([TenantId], map: "IX_AbpTenantNotifications_TenantId")
+}
+
+model AbpTenants {
+  Id                                               Int          @id(map: "PK_AbpTenants") @default(autoincrement())
+  ConnectionString                                 String?      @db.NVarChar(1024)
+  CreationTime                                     DateTime
+  CreatorUserId                                    BigInt?
+  DeleterUserId                                    BigInt?
+  DeletionTime                                     DateTime?
+  EditionId                                        Int?
+  IsActive                                         Boolean
+  IsDeleted                                        Boolean
+  LastModificationTime                             DateTime?
+  LastModifierUserId                               BigInt?
+  Name                                             String       @db.NVarChar(128)
+  TenancyName                                      String       @db.NVarChar(64)
+  AbpEditions                                      AbpEditions? @relation(fields: [EditionId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpTenants_AbpEditions_EditionId")
+  AbpUsers_AbpTenants_CreatorUserIdToAbpUsers      AbpUsers?    @relation("AbpTenants_CreatorUserIdToAbpUsers", fields: [CreatorUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpTenants_AbpUsers_CreatorUserId")
+  AbpUsers_AbpTenants_DeleterUserIdToAbpUsers      AbpUsers?    @relation("AbpTenants_DeleterUserIdToAbpUsers", fields: [DeleterUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpTenants_AbpUsers_DeleterUserId")
+  AbpUsers_AbpTenants_LastModifierUserIdToAbpUsers AbpUsers?    @relation("AbpTenants_LastModifierUserIdToAbpUsers", fields: [LastModifierUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpTenants_AbpUsers_LastModifierUserId")
+
+  @@index([CreatorUserId], map: "IX_AbpTenants_CreatorUserId")
+  @@index([DeleterUserId], map: "IX_AbpTenants_DeleterUserId")
+  @@index([EditionId], map: "IX_AbpTenants_EditionId")
+  @@index([LastModifierUserId], map: "IX_AbpTenants_LastModifierUserId")
+  @@index([TenancyName], map: "IX_AbpTenants_TenancyName")
+}
+
+model AbpUserAccounts {
+  Id                   BigInt    @id(map: "PK_AbpUserAccounts") @default(autoincrement())
+  CreationTime         DateTime
+  CreatorUserId        BigInt?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  EmailAddress         String?   @db.NVarChar(256)
+  IsDeleted            Boolean
+  LastModificationTime DateTime?
+  LastModifierUserId   BigInt?
+  TenantId             Int?
+  UserId               BigInt
+  UserLinkId           BigInt?
+  UserName             String?   @db.NVarChar(256)
+
+  @@index([EmailAddress], map: "IX_AbpUserAccounts_EmailAddress")
+  @@index([TenantId, EmailAddress], map: "IX_AbpUserAccounts_TenantId_EmailAddress")
+  @@index([TenantId, UserId], map: "IX_AbpUserAccounts_TenantId_UserId")
+  @@index([TenantId, UserName], map: "IX_AbpUserAccounts_TenantId_UserName")
+  @@index([UserName], map: "IX_AbpUserAccounts_UserName")
+}
+
+model AbpUserClaims {
+  Id            BigInt   @id(map: "PK_AbpUserClaims") @default(autoincrement())
+  ClaimType     String?  @db.NVarChar(256)
+  ClaimValue    String?  @db.NVarChar(Max)
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  TenantId      Int?
+  UserId        BigInt
+  AbpUsers      AbpUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpUserClaims_AbpUsers_UserId")
+
+  @@index([TenantId, ClaimType], map: "IX_AbpUserClaims_TenantId_ClaimType")
+  @@index([UserId], map: "IX_AbpUserClaims_UserId")
+}
+
+model AbpUserLoginAttempts {
+  Id                     BigInt   @id(map: "PK_AbpUserLoginAttempts") @default(autoincrement())
+  BrowserInfo            String?  @db.NVarChar(512)
+  ClientIpAddress        String?  @db.NVarChar(64)
+  ClientName             String?  @db.NVarChar(128)
+  CreationTime           DateTime
+  Result                 Int      @db.TinyInt
+  TenancyName            String?  @db.NVarChar(64)
+  TenantId               Int?
+  UserId                 BigInt?
+  UserNameOrEmailAddress String?  @db.NVarChar(256)
+
+  @@index([TenancyName, UserNameOrEmailAddress, Result], map: "IX_AbpUserLoginAttempts_TenancyName_UserNameOrEmailAddress_Result")
+  @@index([UserId, TenantId], map: "IX_AbpUserLoginAttempts_UserId_TenantId")
+}
+
+model AbpUserLogins {
+  Id            BigInt   @id(map: "PK_AbpUserLogins") @default(autoincrement())
+  LoginProvider String   @db.NVarChar(128)
+  ProviderKey   String   @db.NVarChar(256)
+  TenantId      Int?
+  UserId        BigInt
+  AbpUsers      AbpUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpUserLogins_AbpUsers_UserId")
+
+  @@index([TenantId, LoginProvider, ProviderKey], map: "IX_AbpUserLogins_TenantId_LoginProvider_ProviderKey")
+  @@index([TenantId, UserId], map: "IX_AbpUserLogins_TenantId_UserId")
+  @@index([UserId], map: "IX_AbpUserLogins_UserId")
+}
+
+model AbpUserNotifications {
+  Id                   String   @id(map: "PK_AbpUserNotifications") @db.UniqueIdentifier
+  CreationTime         DateTime
+  State                Int
+  TenantId             Int?
+  TenantNotificationId String   @db.UniqueIdentifier
+  UserId               BigInt
+  TargetNotifiers      String?  @db.NVarChar(1024)
+
+  @@index([UserId, State, CreationTime], map: "IX_AbpUserNotifications_UserId_State_CreationTime")
+}
+
+model AbpUserOrganizationUnits {
+  Id                 BigInt   @id(map: "PK_AbpUserOrganizationUnits") @default(autoincrement())
+  CreationTime       DateTime
+  CreatorUserId      BigInt?
+  OrganizationUnitId BigInt
+  TenantId           Int?
+  UserId             BigInt
+  IsDeleted          Boolean  @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__AbpUserOr__IsDel__7A672E12")
+
+  @@index([TenantId, OrganizationUnitId], map: "IX_AbpUserOrganizationUnits_TenantId_OrganizationUnitId")
+  @@index([TenantId, UserId], map: "IX_AbpUserOrganizationUnits_TenantId_UserId")
+}
+
+model AbpUserRoles {
+  Id            BigInt   @id(map: "PK_AbpUserRoles") @default(autoincrement())
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  RoleId        Int
+  TenantId      Int?
+  UserId        BigInt
+  AbpUsers      AbpUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpUserRoles_AbpUsers_UserId")
+
+  @@index([TenantId, RoleId], map: "IX_AbpUserRoles_TenantId_RoleId")
+  @@index([TenantId, UserId], map: "IX_AbpUserRoles_TenantId_UserId")
+  @@index([UserId], map: "IX_AbpUserRoles_UserId")
+}
+
+model AbpUsers {
+  Id                                                               BigInt                     @id(map: "PK_AbpUsers") @default(autoincrement())
+  AccessFailedCount                                                Int
+  AuthenticationSource                                             String?                    @db.NVarChar(64)
+  ConcurrencyStamp                                                 String?                    @db.NVarChar(128)
+  CreationTime                                                     DateTime
+  CreatorUserId                                                    BigInt?
+  DeleterUserId                                                    BigInt?
+  DeletionTime                                                     DateTime?
+  EmailAddress                                                     String                     @db.NVarChar(256)
+  EmailConfirmationCode                                            String?                    @db.NVarChar(328)
+  IsActive                                                         Boolean
+  IsDeleted                                                        Boolean
+  IsEmailConfirmed                                                 Boolean
+  IsLockoutEnabled                                                 Boolean
+  IsPhoneNumberConfirmed                                           Boolean
+  IsTwoFactorEnabled                                               Boolean
+  LastModificationTime                                             DateTime?
+  LastModifierUserId                                               BigInt?
+  LockoutEndDateUtc                                                DateTime?
+  Name                                                             String                     @db.NVarChar(64)
+  NormalizedEmailAddress                                           String                     @db.NVarChar(256)
+  NormalizedUserName                                               String                     @db.NVarChar(256)
+  Password                                                         String                     @db.NVarChar(128)
+  PasswordResetCode                                                String?                    @db.NVarChar(328)
+  PhoneNumber                                                      String?                    @db.NVarChar(32)
+  SecurityStamp                                                    String?                    @db.NVarChar(128)
+  Surname                                                          String                     @db.NVarChar(64)
+  TenantId                                                         Int?
+  UserName                                                         String                     @db.NVarChar(256)
+  ProfileStatus                                                    Int                        @default(0, map: "DF__AbpUsers__Profil__540C7B00")
+  NurseType                                                        Int?
+  AbpPermissions                                                   AbpPermissions[]
+  AbpRoles_AbpRoles_CreatorUserIdToAbpUsers                        AbpRoles[]                 @relation("AbpRoles_CreatorUserIdToAbpUsers")
+  AbpRoles_AbpRoles_DeleterUserIdToAbpUsers                        AbpRoles[]                 @relation("AbpRoles_DeleterUserIdToAbpUsers")
+  AbpRoles_AbpRoles_LastModifierUserIdToAbpUsers                   AbpRoles[]                 @relation("AbpRoles_LastModifierUserIdToAbpUsers")
+  AbpSettings                                                      AbpSettings[]
+  AbpTenants_AbpTenants_CreatorUserIdToAbpUsers                    AbpTenants[]               @relation("AbpTenants_CreatorUserIdToAbpUsers")
+  AbpTenants_AbpTenants_DeleterUserIdToAbpUsers                    AbpTenants[]               @relation("AbpTenants_DeleterUserIdToAbpUsers")
+  AbpTenants_AbpTenants_LastModifierUserIdToAbpUsers               AbpTenants[]               @relation("AbpTenants_LastModifierUserIdToAbpUsers")
+  AbpUserClaims                                                    AbpUserClaims[]
+  AbpUserLogins                                                    AbpUserLogins[]
+  AbpUserRoles                                                     AbpUserRoles[]
+  AbpUsers_AbpUsers_CreatorUserIdToAbpUsers                        AbpUsers?                  @relation("AbpUsers_CreatorUserIdToAbpUsers", fields: [CreatorUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpUsers_AbpUsers_CreatorUserId")
+  other_AbpUsers_AbpUsers_CreatorUserIdToAbpUsers                  AbpUsers[]                 @relation("AbpUsers_CreatorUserIdToAbpUsers")
+  AbpUsers_AbpUsers_DeleterUserIdToAbpUsers                        AbpUsers?                  @relation("AbpUsers_DeleterUserIdToAbpUsers", fields: [DeleterUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpUsers_AbpUsers_DeleterUserId")
+  other_AbpUsers_AbpUsers_DeleterUserIdToAbpUsers                  AbpUsers[]                 @relation("AbpUsers_DeleterUserIdToAbpUsers")
+  AbpUsers_AbpUsers_LastModifierUserIdToAbpUsers                   AbpUsers?                  @relation("AbpUsers_LastModifierUserIdToAbpUsers", fields: [LastModifierUserId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_AbpUsers_AbpUsers_LastModifierUserId")
+  other_AbpUsers_AbpUsers_LastModifierUserIdToAbpUsers             AbpUsers[]                 @relation("AbpUsers_LastModifierUserIdToAbpUsers")
+  AbpUserTokens                                                    AbpUserTokens[]
+  BidsOnShotRequestDetails                                         BidsOnShotRequestDetails[]
+  NurseDocuments                                                   NurseDocuments[]
+  RequestShotServices_RequestShotServices_NurseIdToAbpUsers        RequestShotServices[]      @relation("RequestShotServices_NurseIdToAbpUsers")
+  RequestShotServices_RequestShotServices_RequestedByIdToAbpUsers  RequestShotServices[]      @relation("RequestShotServices_RequestedByIdToAbpUsers")
+  RequestShotServices_RequestShotServices_RequestedForIdToAbpUsers RequestShotServices[]      @relation("RequestShotServices_RequestedForIdToAbpUsers")
+  RequestShotServiceStatus                                         RequestShotServiceStatus[]
+  ShotRatingReview                                                 ShotRatingReview[]
+  UserAddresses                                                    UserAddresses[]
+  UserBankDetails                                                  UserBankDetails[]
+  UserWallet                                                       UserWallet[]
+  WithdrawRequest                                                  WithdrawRequest[]
+
+  @@index([CreatorUserId], map: "IX_AbpUsers_CreatorUserId")
+  @@index([DeleterUserId], map: "IX_AbpUsers_DeleterUserId")
+  @@index([LastModifierUserId], map: "IX_AbpUsers_LastModifierUserId")
+  @@index([TenantId, NormalizedEmailAddress], map: "IX_AbpUsers_TenantId_NormalizedEmailAddress")
+  @@index([TenantId, NormalizedUserName], map: "IX_AbpUsers_TenantId_NormalizedUserName")
+}
+
+model AbpUserTokens {
+  Id            BigInt    @id(map: "PK_AbpUserTokens") @default(autoincrement())
+  LoginProvider String?   @db.NVarChar(128)
+  Name          String?   @db.NVarChar(128)
+  TenantId      Int?
+  UserId        BigInt
+  Value         String?   @db.NVarChar(512)
+  ExpireDate    DateTime?
+  AbpUsers      AbpUsers  @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpUserTokens_AbpUsers_UserId")
+
+  @@index([TenantId, UserId], map: "IX_AbpUserTokens_TenantId_UserId")
+  @@index([UserId], map: "IX_AbpUserTokens_UserId")
+}
+
+model AbpWebhookEvents {
+  Id                     String                   @id(map: "PK_AbpWebhookEvents") @db.UniqueIdentifier
+  WebhookName            String                   @db.NVarChar(Max)
+  Data                   String?                  @db.NVarChar(Max)
+  CreationTime           DateTime
+  TenantId               Int?
+  IsDeleted              Boolean
+  DeletionTime           DateTime?
+  AbpWebhookSendAttempts AbpWebhookSendAttempts[]
+}
+
+model AbpWebhookSendAttempts {
+  Id                    String           @id(map: "PK_AbpWebhookSendAttempts") @db.UniqueIdentifier
+  WebhookEventId        String           @db.UniqueIdentifier
+  WebhookSubscriptionId String           @db.UniqueIdentifier
+  Response              String?          @db.NVarChar(Max)
+  ResponseStatusCode    Int?
+  CreationTime          DateTime
+  LastModificationTime  DateTime?
+  TenantId              Int?
+  AbpWebhookEvents      AbpWebhookEvents @relation(fields: [WebhookEventId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AbpWebhookSendAttempts_AbpWebhookEvents_WebhookEventId")
+
+  @@index([WebhookEventId], map: "IX_AbpWebhookSendAttempts_WebhookEventId")
+}
+
+model AbpWebhookSubscriptions {
+  Id            String   @id(map: "PK_AbpWebhookSubscriptions") @db.UniqueIdentifier
+  CreationTime  DateTime
+  CreatorUserId BigInt?
+  TenantId      Int?
+  WebhookUri    String   @db.NVarChar(Max)
+  Secret        String   @db.NVarChar(Max)
+  IsActive      Boolean
+  Webhooks      String?  @db.NVarChar(Max)
+  Headers       String?  @db.NVarChar(Max)
+}
+
+model Attachments {
+  Id                        String                      @id(map: "PK_Attachments") @db.UniqueIdentifier
+  OriginalFileName          String                      @db.NVarChar(255)
+  GeneratedFileName         String                      @db.NVarChar(255)
+  BaseUrl                   String                      @db.NVarChar(255)
+  FileType                  String                      @db.NVarChar(75)
+  mime_type                 String                      @db.NVarChar(75)
+  CreatorUserId             BigInt?
+  CreationTime              DateTime
+  LastModifierUserId        BigInt?
+  LastModificationTime      DateTime?
+  DeleterUserId             BigInt?
+  DeletionTime              DateTime?
+  IsDeleted                 Boolean
+  NurseDocuments            NurseDocuments[]
+  RequestShotServiceDetails RequestShotServiceDetails[]
+  WithdrawRequest           WithdrawRequest[]
+}
+
+model BidPayments {
+  Id                       String                     @id(map: "PK_BidPayments") @db.UniqueIdentifier
+  CreationTime             DateTime
+  CreatorUserId            BigInt?
+  LastModificationTime     DateTime?
+  LastModifierUserId       BigInt?
+  IsDeleted                Boolean
+  DeleterUserId            BigInt?
+  DeletionTime             DateTime?
+  RequestShotServiceId     String                     @db.UniqueIdentifier
+  Gateway                  Int
+  Description              String?                    @db.NVarChar(Max)
+  Amount                   Decimal                    @db.Decimal(18, 2)
+  ExternalPaymentId        String?                    @db.NVarChar(Max)
+  InvoiceNo                String?                    @db.NVarChar(Max)
+  IsRecurring              Boolean
+  SuccessUrl               String?                    @db.NVarChar(Max)
+  ErrorUrl                 String?                    @db.NVarChar(Max)
+  ReceiptUrl               String?                    @db.NVarChar(Max)
+  RefundUrl                String?                    @db.NVarChar(Max)
+  TenantId                 Int
+  DayCount                 Int
+  PaymentPeriodType        Int?
+  PaymentType              Int
+  Status                   Int
+  RequestShotServices      RequestShotServices        @relation(fields: [RequestShotServiceId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BidPayments_RequestShotServices_RequestShotServiceId")
+  BidPaymentsExtensionData BidPaymentsExtensionData[]
+
+  @@index([RequestShotServiceId], map: "IX_BidPayments_RequestShotServiceId")
+}
+
+model BidPaymentsExtensionData {
+  Id           BigInt      @id(map: "PK_BidPaymentsExtensionData") @default(autoincrement())
+  BidPaymentId String      @db.UniqueIdentifier
+  Key          String?     @db.NVarChar(Max)
+  Value        String?     @db.NVarChar(Max)
+  IsDeleted    Boolean
+  BidPayments  BidPayments @relation(fields: [BidPaymentId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BidPaymentsExtensionData_BidPayments_BidPaymentId")
+
+  @@index([BidPaymentId], map: "IX_BidPaymentsExtensionData_BidPaymentId")
+}
+
+model BidsOnShotRequestDetails {
+  Id                   String              @id(map: "PK_BidsOnShotRequestDetails") @db.UniqueIdentifier
+  RequestShotServiceId String              @db.UniqueIdentifier
+  NurseId              BigInt
+  NurseCharges         Decimal             @db.Decimal(18, 2)
+  PlatformCharges      Decimal             @db.Decimal(18, 2)
+  NoteFromNurse        String?
+  NoteFromRequester    String?
+  Status               Int
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  AbpUsers             AbpUsers            @relation(fields: [NurseId], references: [Id], onUpdate: NoAction, map: "FK_BidsOnShotRequestDetails_AbpUsers_NurseId")
+  RequestShotServices  RequestShotServices @relation(fields: [RequestShotServiceId], references: [Id], onUpdate: NoAction, map: "FK_BidsOnShotRequestDetails_RequestShotServices_RequestShotServiceId")
+
+  @@index([NurseId], map: "IX_BidsOnShotRequestDetails_NurseId")
+  @@index([RequestShotServiceId], map: "IX_BidsOnShotRequestDetails_RequestShotServiceId")
+}
+
+model City {
+  Id              String        @id(map: "PK_City") @db.UniqueIdentifier
+  CountryId       String        @db.UniqueIdentifier
+  StateOrRegionId String        @db.UniqueIdentifier
+  Name            String        @db.NVarChar(50)
+  Status          Int           @db.TinyInt
+  Country         Country       @relation(fields: [CountryId], references: [Id], onUpdate: NoAction, map: "FK_City_Country_CountryId")
+  StateOrRegion   StateOrRegion @relation(fields: [StateOrRegionId], references: [Id], onUpdate: NoAction, map: "FK_City_StateOrRegion_StateOrRegionId")
+
+  @@index([CountryId], map: "IX_City_CountryId")
+  @@index([StateOrRegionId], map: "IX_City_StateOrRegionId")
+}
+
+model Country {
+  Id            String          @id(map: "PK_Country") @db.UniqueIdentifier
+  Name          String          @db.NVarChar(50)
+  Status        Int             @db.TinyInt
+  DeleterUserId BigInt?
+  DeletionTime  DateTime?
+  IsDeleted     Boolean
+  Abbreviation  String          @default("N'", map: "DF__Country__Abbrevi__6BE40491") @db.NVarChar(5)
+  DailCode      String?         @db.NVarChar(6)
+  City          City[]
+  StateOrRegion StateOrRegion[]
+  UserAddresses UserAddresses[]
+}
+
+model DocumentType {
+  Id                   String           @id(map: "PK_DocumentType") @db.UniqueIdentifier
+  Name                 String           @db.NVarChar(100)
+  HelpText             String           @db.NVarChar(100)
+  IsRequired           Boolean
+  status               Int
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  RoleType             Int              @default(0, map: "DF__DocumentT__RoleT__5D95E53A")
+  NurseDocuments       NurseDocuments[]
+}
+
+model EmailTemplates {
+  Id                   String    @id(map: "PK_EmailTemplates") @db.UniqueIdentifier
+  TemplateType         Int
+  Subject              String    @db.NVarChar(Max)
+  MessageBody          String    @db.NVarChar(Max)
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+}
+
+model NurseDocuments {
+  Id                   String       @id(map: "PK_NurseDocuments") @db.UniqueIdentifier
+  UserId               BigInt
+  DocumentTypeId       String       @db.UniqueIdentifier
+  AttachmentId         String       @db.UniqueIdentifier
+  Notes                String       @db.NVarChar(500)
+  Status               Int
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  AbpUsers             AbpUsers     @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NurseDocuments_AbpUsers_UserId")
+  Attachments          Attachments  @relation(fields: [AttachmentId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NurseDocuments_Attachments_AttachmentId")
+  DocumentType         DocumentType @relation(fields: [DocumentTypeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NurseDocuments_DocumentType_DocumentTypeId")
+
+  @@index([AttachmentId], map: "IX_NurseDocuments_AttachmentId")
+  @@index([DocumentTypeId], map: "IX_NurseDocuments_DocumentTypeId")
+  @@index([UserId], map: "IX_NurseDocuments_UserId")
+}
+
+model RequestShotServiceDetails {
+  Id                          String               @id(map: "PK_RequestShotServiceDetails") @db.UniqueIdentifier
+  ShotRequestTypeId           String               @db.UniqueIdentifier
+  Note                        String               @db.NVarChar(255)
+  RequestToPickupFromPharmacy Boolean
+  AttachementId               String?              @db.UniqueIdentifier
+  CreatorUserId               BigInt?
+  CreationTime                DateTime
+  LastModifierUserId          BigInt?
+  LastModificationTime        DateTime?
+  DeleterUserId               BigInt?
+  DeletionTime                DateTime?
+  IsDeleted                   Boolean
+  RequestShotServiceId        String?              @db.UniqueIdentifier
+  IsRefreesation              Boolean              @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__RequestSh__IsRef__367C1819")
+  Attachments                 Attachments?         @relation(fields: [AttachementId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_RequestShotServiceDetails_Attachments_AttachementId")
+  RequestShotServices         RequestShotServices? @relation(fields: [RequestShotServiceId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_RequestShotServiceDetails_RequestShotServices_RequestShotServiceId")
+  ShotRequestType             ShotRequestType      @relation(fields: [ShotRequestTypeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_RequestShotServiceDetails_ShotRequestType_ShotRequestTypeId")
+
+  @@index([AttachementId], map: "IX_RequestShotServiceDetails_AttachementId")
+  @@index([RequestShotServiceId], map: "IX_RequestShotServiceDetails_RequestShotServiceId")
+  @@index([ShotRequestTypeId], map: "IX_RequestShotServiceDetails_ShotRequestTypeId")
+}
+
+model RequestShotServices {
+  Id                                                    String                      @id(map: "PK_RequestShotServices") @db.UniqueIdentifier
+  RequestedType                                         Int                         @db.TinyInt
+  RequestedById                                         BigInt
+  RequestedForId                                        BigInt
+  ScheduleDate                                          DateTime
+  ScheduleTime                                          DateTime
+  ShotLocationId                                        String                      @db.UniqueIdentifier
+  AutoExpireRequestAt                                   DateTime
+  AutoNotifyBackOfficeAt                                DateTime
+  Status                                                Int                         @db.SmallInt
+  CreatorUserId                                         BigInt?
+  CreationTime                                          DateTime
+  LastModifierUserId                                    BigInt?
+  LastModificationTime                                  DateTime?
+  DeleterUserId                                         BigInt?
+  DeletionTime                                          DateTime?
+  IsDeleted                                             Boolean
+  TenantId                                              Int?
+  RequestNo                                             String                      @default("N'", map: "DF__RequestSh__Reque__3587F3E0") @db.NVarChar(15)
+  HiredDate                                             DateTime?
+  NurseId                                               BigInt?
+  BidPayments                                           BidPayments[]
+  BidsOnShotRequestDetails                              BidsOnShotRequestDetails[]
+  RequestShotServiceDetails                             RequestShotServiceDetails[]
+  AbpUsers_RequestShotServices_NurseIdToAbpUsers        AbpUsers?                   @relation("RequestShotServices_NurseIdToAbpUsers", fields: [NurseId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_RequestShotServices_AbpUsers_NurseId")
+  AbpUsers_RequestShotServices_RequestedByIdToAbpUsers  AbpUsers                    @relation("RequestShotServices_RequestedByIdToAbpUsers", fields: [RequestedById], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_RequestShotServices_AbpUsers_RequestedById")
+  AbpUsers_RequestShotServices_RequestedForIdToAbpUsers AbpUsers                    @relation("RequestShotServices_RequestedForIdToAbpUsers", fields: [RequestedForId], references: [Id], onUpdate: NoAction, map: "FK_RequestShotServices_AbpUsers_RequestedForId")
+  UserAddresses                                         UserAddresses               @relation(fields: [ShotLocationId], references: [Id], onUpdate: NoAction, map: "FK_RequestShotServices_UserAddresses_ShotLocationId")
+  RequestShotServiceStatus                              RequestShotServiceStatus?
+  ShotRatingReview                                      ShotRatingReview[]
+  UserWallet                                            UserWallet[]
+
+  @@index([NurseId], map: "IX_RequestShotServices_NurseId")
+  @@index([RequestedById], map: "IX_RequestShotServices_RequestedById")
+  @@index([RequestedForId], map: "IX_RequestShotServices_RequestedForId")
+  @@index([ShotLocationId], map: "IX_RequestShotServices_ShotLocationId")
+}
+
+model RequestShotServiceStatus {
+  Id                         String              @id(map: "PK_RequestShotServiceStatus") @db.UniqueIdentifier
+  RequestShotServiceId       String              @unique(map: "IX_RequestShotServiceStatus_RequestShotServiceId") @db.UniqueIdentifier
+  NurseId                    BigInt
+  IsNurseProvidedSerivce     Boolean
+  IsNofiticaionSentToPatient Boolean
+  NofiticaionSentAt          DateTime
+  IsPatientConfirmedService  Boolean
+  PatientConfirmedAt         DateTime
+  CreatorUserId              BigInt?
+  CreationTime               DateTime
+  LastModifierUserId         BigInt?
+  LastModificationTime       DateTime?
+  DeleterUserId              BigInt?
+  DeletionTime               DateTime?
+  IsDeleted                  Boolean
+  AbpUsers                   AbpUsers            @relation(fields: [NurseId], references: [Id], onUpdate: NoAction, map: "FK_RequestShotServiceStatus_AbpUsers_NurseId")
+  RequestShotServices        RequestShotServices @relation(fields: [RequestShotServiceId], references: [Id], onUpdate: NoAction, map: "FK_RequestShotServiceStatus_RequestShotServices_RequestShotServiceId")
+
+  @@index([NurseId], map: "IX_RequestShotServiceStatus_NurseId")
+}
+
+model ShotRatingReview {
+  Id                   String              @id(map: "PK_ShotRatingReview") @db.UniqueIdentifier
+  RatingType           Int
+  RequestShotServiceId String              @db.UniqueIdentifier
+  PatientNurseId       BigInt
+  Ratings              Int
+  NoteFromRequester    String              @db.NVarChar(255)
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  AbpUsers             AbpUsers            @relation(fields: [PatientNurseId], references: [Id], onUpdate: NoAction, map: "FK_ShotRatingReview_AbpUsers_PatientNurseId")
+  RequestShotServices  RequestShotServices @relation(fields: [RequestShotServiceId], references: [Id], onUpdate: NoAction, map: "FK_ShotRatingReview_RequestShotServices_RequestShotServiceId")
+
+  @@index([PatientNurseId], map: "IX_ShotRatingReview_PatientNurseId")
+  @@index([RequestShotServiceId], map: "IX_ShotRatingReview_RequestShotServiceId")
+}
+
+model ShotRequestType {
+  Id                        String                      @id(map: "PK_ShotRequestType") @db.UniqueIdentifier
+  Name                      String                      @db.NVarChar(255)
+  Description               String?                     @db.NVarChar(255)
+  ParentShotTypeId          String?                     @db.UniqueIdentifier
+  Status                    Int                         @db.TinyInt
+  CreatorUserId             BigInt?
+  CreationTime              DateTime
+  LastModifierUserId        BigInt?
+  LastModificationTime      DateTime?
+  DeleterUserId             BigInt?
+  DeletionTime              DateTime?
+  IsDeleted                 Boolean
+  TenantId                  Int?
+  LicensedPracticalNursing  Boolean                     @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__ShotReque__Licen__662B2B3B")
+  NoOfUnit                  Int                         @default(0, map: "DF__ShotReque__NoOfU__671F4F74")
+  NursePractitioner         Boolean                     @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__ShotReque__Nurse__681373AD")
+  RegisteredNurse           Boolean                     @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__ShotReque__Regis__690797E6")
+  ServiceCharges            Decimal                     @default(0.0, map: "DF__ShotReque__Servi__69FBBC1F") @db.Decimal(18, 2)
+  RequestShotServiceDetails RequestShotServiceDetails[]
+}
+
+model StateOrRegion {
+  Id            String          @id(map: "PK_StateOrRegion") @db.UniqueIdentifier
+  CountryId     String          @db.UniqueIdentifier
+  Name          String          @db.NVarChar(50)
+  Status        Int             @db.TinyInt
+  Abbreviation  String          @default("N'", map: "DF__StateOrRe__Abbre__6AEFE058") @db.NVarChar(5)
+  City          City[]
+  Country       Country         @relation(fields: [CountryId], references: [Id], onUpdate: NoAction, map: "FK_StateOrRegion_Country_CountryId")
+  UserAddresses UserAddresses[]
+
+  @@index([CountryId], map: "IX_StateOrRegion_CountryId")
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B615F620EF6") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+model UserAddresses {
+  Id                    String                @id(map: "PK_UserAddresses") @db.UniqueIdentifier
+  UserId                BigInt
+  AddressType           Int                   @db.TinyInt
+  StreetLineOne         String                @db.NVarChar(255)
+  StreetLineTWo         String?               @db.NVarChar(Max)
+  zipcode               String                @db.NVarChar(10)
+  IsDefaultShotLocation Boolean
+  Latitude              Float
+  Longitude             Float
+  Status                Int                   @db.TinyInt
+  CreatorUserId         BigInt?
+  CreationTime          DateTime
+  LastModifierUserId    BigInt?
+  LastModificationTime  DateTime?
+  DeleterUserId         BigInt?
+  DeletionTime          DateTime?
+  IsDeleted             Boolean
+  CityId                String?               @db.UniqueIdentifier
+  CountryId             String                @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__UserAddre__Count__2645B050") @db.UniqueIdentifier
+  StateOrRegionId       String                @default(dbgenerated("00000000-0000-0000-0000-000000000000"), map: "DF__UserAddre__State__2739D489") @db.UniqueIdentifier
+  CityName              String?               @db.NVarChar(Max)
+  RequestShotServices   RequestShotServices[]
+  AbpUsers              AbpUsers              @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserAddresses_AbpUsers_UserId")
+  Country               Country               @relation(fields: [CountryId], references: [Id], onUpdate: NoAction, map: "FK_UserAddresses_Country_CountryId")
+  StateOrRegion         StateOrRegion         @relation(fields: [StateOrRegionId], references: [Id], onUpdate: NoAction, map: "FK_UserAddresses_StateOrRegion_StateOrRegionId")
+
+  @@index([CountryId], map: "IX_UserAddresses_CountryId")
+  @@index([StateOrRegionId], map: "IX_UserAddresses_StateOrRegionId")
+  @@index([UserId], map: "IX_UserAddresses_UserId")
+}
+
+model UserBankDetails {
+  Id                   String            @id(map: "PK_UserBankDetails") @db.UniqueIdentifier
+  UserId               BigInt
+  FirstName            String            @db.NVarChar(50)
+  LastName             String            @db.NVarChar(50)
+  MiddleName           String?           @db.NVarChar(Max)
+  PhoneNumber          String            @db.NVarChar(50)
+  Email                String            @db.NVarChar(50)
+  BankName             String            @db.NVarChar(100)
+  BankAccount          String            @db.NVarChar(100)
+  BankRountingNumber   String            @db.NVarChar(100)
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  AbpUsers             AbpUsers          @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserBankDetails_AbpUsers_UserId")
+  WithdrawRequest      WithdrawRequest[]
+
+  @@index([UserId], map: "IX_UserBankDetails_UserId")
+}
+
+model UserWallet {
+  Id                   String               @id(map: "PK_UserWallet") @db.UniqueIdentifier
+  UserId               BigInt
+  WithdrawAmount       Decimal              @db.Decimal(18, 2)
+  Status               Int
+  RequestShotServiceId String?              @db.UniqueIdentifier
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  TenantId             Int?
+  WithdrawRequestId    String?              @db.UniqueIdentifier
+  AbpUsers             AbpUsers             @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserWallet_AbpUsers_UserId")
+  RequestShotServices  RequestShotServices? @relation(fields: [RequestShotServiceId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_UserWallet_RequestShotServices_RequestShotServiceId")
+  WithdrawRequest      WithdrawRequest?     @relation(fields: [WithdrawRequestId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_UserWallet_WithdrawRequest_WithdrawRequestId")
+
+  @@index([RequestShotServiceId], map: "IX_UserWallet_RequestShotServiceId")
+  @@index([UserId], map: "IX_UserWallet_UserId")
+  @@index([WithdrawRequestId], map: "IX_UserWallet_WithdrawRequestId")
+}
+
+model WithdrawRequest {
+  Id                   String           @id(map: "PK_WithdrawRequest") @db.UniqueIdentifier
+  UserId               BigInt
+  WithdrawAmount       Decimal          @db.Decimal(18, 2)
+  Status               Int
+  TransactionNotes     String?          @db.NVarChar(Max)
+  CreatorUserId        BigInt?
+  CreationTime         DateTime
+  LastModifierUserId   BigInt?
+  LastModificationTime DateTime?
+  DeleterUserId        BigInt?
+  DeletionTime         DateTime?
+  IsDeleted            Boolean
+  TenantId             Int?
+  AttachmentId         String?          @db.UniqueIdentifier
+  TransactionTime      DateTime?
+  BankAccountId        String?          @db.UniqueIdentifier
+  UserWallet           UserWallet[]
+  AbpUsers             AbpUsers         @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_WithdrawRequest_AbpUsers_UserId")
+  Attachments          Attachments?     @relation(fields: [AttachmentId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_WithdrawRequest_Attachments_AttachmentId")
+  UserBankDetails      UserBankDetails? @relation(fields: [BankAccountId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_WithdrawRequest_UserBankDetails_BankAccountId")
+
+  @@index([AttachmentId], map: "IX_WithdrawRequest_AttachmentId")
+  @@index([BankAccountId], map: "IX_WithdrawRequest_BankAccountId")
+  @@index([UserId], map: "IX_WithdrawRequest_UserId")
+}
